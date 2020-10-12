@@ -41,6 +41,12 @@ dependencies:
   amap_all_fluttify: ^0.17.0
   # 占位符
   shimmer: ^1.0.0
+  # 序列化工具
+  json_annotation: ^2.0.0
+  # 加载动画
+  flutter_spinkit: ^2.0.1
+  # 状态条
+  flutter_statusbarcolor: ^0.2.3
   # 加密算法库
   pointycastle: ^1.0.1
   cryptoutils: ^0.4.0
