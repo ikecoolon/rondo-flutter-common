@@ -66,6 +66,7 @@ class RondoUtils {
           callback(result);
         }
 //        return Future.value(result);
+        flutterWebviewPlugin?.close();
       }
     });
   }
