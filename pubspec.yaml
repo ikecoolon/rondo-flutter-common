@@ -93,3 +93,6 @@ flutter:
   #
   # For details regarding fonts in packages, see
   # https://flutter.dev/custom-fonts/#from-packages
+
+  assets:
+    - static/secret/sm3Sm2.html

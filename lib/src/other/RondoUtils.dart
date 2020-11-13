@@ -10,9 +10,10 @@ import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'package:rondo_flutter_common/main.dart';
 import 'package:rondo_flutter_common/src/other/RondoKey.dart';
 
+enum EncryptType { SM3SM2, SM2 }
+
 /// author by zyl
 class RondoUtils {
-
   static final double MILLIS_LIMIT = 1000.0;
   static final double SECONDS_LIMIT = 60 * MILLIS_LIMIT;
   static final double MINUTES_LIMIT = 60 * SECONDS_LIMIT;
@@ -43,7 +44,7 @@ class RondoUtils {
   ///[ callback ] 返回结果，如果加密失败返回 null
   static secretToEncrypt(context, publicKey, value,
       {Function(String) callback}) async {
-    var htmlData = await rootBundle.loadString('static/secret/index.html');
+    var htmlData = await rootBundle.loadString('static/secret/sm3Sm2.html');
 //      flutterWebViewPlugin.launch(Address.hostWebSM3,
     flutterWebviewPlugin.launch(
       Uri.dataFromString(htmlData, mimeType: 'text/html').toString(),
@@ -55,7 +56,7 @@ class RondoUtils {
       if (state.type == WebViewState.finishLoad) {
         result = await flutterWebviewPlugin.evalJavascript(
             "this.sm3AndSm2EncryptRP('$publicKey','$value','|');");
-        //处理安卓���差异加密后的值会带两个冒号，将其去掉
+        //处理安卓端差异(加密后的值会带两个冒号，将其去掉)
         _onStateChanged.cancel();
         if (Platform.isAndroid) {
           result = result.substring(1, result.length - 1);
@@ -69,6 +70,52 @@ class RondoUtils {
         flutterWebviewPlugin?.close();
       }
     });
+  }
+
+  static Future<String> secretToEncryptPromise(publicKey, value,
+      {EncryptType encryptType = EncryptType.SM3SM2}) async {
+    List<String> result = await secretMultiToEncryptPromise(publicKey, [value],
+        encryptType: encryptType);
+    if (result != null && result.length > 0) {
+      return result[0];
+    }
+    return null;
+  }
+
+  static Future<List<String>> secretMultiToEncryptPromise(
+      publicKey, List values,
+      {EncryptType encryptType = EncryptType.SM3SM2}) async {
+    flutterWebviewPlugin?.close();
+    String file = 'static/secret/sm3Sm2.html';
+    if (encryptType == EncryptType.SM2) file = 'static/secret/sm2.html';
+    String htmlData = await rootBundle.loadString(file);
+
+    await flutterWebviewPlugin.launch(
+      Uri.dataFromString(htmlData, mimeType: 'text/html').toString(),
+      hidden: true,
+    );
+
+    await flutterWebviewPlugin.onStateChanged.firstWhere((state) {
+      if (state.type == WebViewState.finishLoad) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    List<String> results = [];
+    for (var element in values) {
+      String result = await flutterWebviewPlugin.evalJavascript(
+          "this.sm3AndSm2EncryptRP('$publicKey','$element','|');");
+      //处理安卓端差异(加密后的值会带两个冒号，将其去掉)
+      if (Platform.isAndroid) {
+        result = result.substring(1, result.length - 1);
+      }
+      results.add(result);
+    }
+
+    flutterWebviewPlugin?.close();
+    return results;
   }
 
   static Future<Null> showLoadingDialog(BuildContext context,
