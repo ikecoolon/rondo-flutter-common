@@ -121,7 +121,7 @@ class _AostarCommonWidget extends State<AostarCommonWidget> {
         Fluttertoast.showToast(msg: '请求超时');
         break;
       default:
-        Fluttertoast.showToast(msg: '其他异常 $message');
+        Fluttertoast.showToast(msg: '$message');
         break;
     }
   }

@@ -25,6 +25,70 @@ class Api {
   Api._();
 
   static Api _instance = Api._();
+  static List<String> RND_DICT = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    'a',
+    'b',
+    'c',
+    'd',
+    'e',
+    'f',
+    'g',
+    'h',
+    'i',
+    'j',
+    'k',
+    'l',
+    'm',
+    'n',
+    'o',
+    'p',
+    'q',
+    'r',
+    's',
+    't',
+    'u',
+    'v',
+    'w',
+    'x',
+    'y',
+    'z',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z'
+  ];
 
   factory Api() => _instance;
 
@@ -39,7 +103,7 @@ class Api {
       containUrlKey,
       loginRoute; //您应用的登录页命名
 
-  bool debug = false;
+  bool debug = true;
 
   //http 分析工具
   Alice alice;
@@ -132,16 +196,39 @@ class Api {
     return antiReplayParams;
   }
 
-  antiReplayPro(data, bool isString) async {
-    data['timestamp'] = DateTime.now().millisecondsSinceEpoch.toString();
-    data['nonce'] = getUUID();
-    data['token'] = await LocalStorage.get(this.tokenKey);
-//    data['key'] =
-    if (isString) {
-      for (var o in data) {}
+  iChargeData(Map data, bool isFileUpload) async {
+    data['timestamp'] = DateTime.now().millisecondsSinceEpoch;
+    data['nonce'] = randomStr(true, 8, 10);
+//    data['nonce'] = getUUID();
+    data['token'] = await LocalStorage.get(this.tokenKey) ?? '';
+    //防篡改
+    data['key'] = getSecert(data);
+
+    if (isFileUpload) {
+      for (var i = 0; i < data.length; ++i) {
+        var o = data[i];
+        data[i] = o.toString();
+      }
     }
 
     return data;
+  }
+
+  randomStr(flag, min, max) {
+    var str = '';
+    double index;
+    var range = min;
+    // min,max范围内随机的一个数
+    if (flag) {
+      range = (Random().nextDouble() * (max - min + 1) + min).floorToDouble();
+    }
+
+    for (var i = 0; i < range; i++) {
+      index = (Random().nextDouble() * (RND_DICT.length - 1)).roundToDouble();
+      str += RND_DICT[index.toInt()];
+    }
+
+    return str;
   }
 
   getDeviceInfo() async {
@@ -226,40 +313,24 @@ class Api {
     return {'awlSign': newData};
   }
 
-  getParamsPro(params, urlStr, method) {
-    var urlParams = getUrlParams(urlStr);
+  getSecert(params) {
     if (params == null) params = {};
-    Map paramsData = {...urlParams};
 
-    var arr = [];
-    paramsData.forEach((key, value) {
-      arr.add(key);
-    });
-    arr.sort();
-    String url = "";
-    for (var i in arr) {
-      url += i + "=" + paramsData[i] + "&";
-    }
-    String object = '', urlString = '';
+    String object = '';
     try {
-      method == 'post' ? object = jsonEncode(params) : object = "";
+      object = jsonEncode(params);
     } catch (err) {}
 
-    (url != null && url.isNotEmpty)
-        ? urlString = url.substring(0, url.length - 1)
-        : urlString = "";
-
-    String newData = object + urlString;
-
+    String newData = object;
     if (newData != null && newData.isNotEmpty) {
       var key = utf8.encode('puhua');
       var bytes = utf8.encode(newData);
 
-      var hmacSha256 = new Hmac(sha256, key); // HMAC-SHA256
-      newData = hmacSha256.convert(bytes).toString();
+      var hmacMd5 = new Hmac(md5, key); // HMAC-SHA256
+      newData = hmacMd5.convert(bytes).toString().toUpperCase();
     }
 
-    return {'awlSign': newData};
+    return newData;
   }
 
   ///发起网络请求
@@ -474,9 +545,6 @@ class Api {
       if (response != null) {
         print('返回参数: ' + response.toString());
       }
-      if (optionParams["Authorization"] != null) {
-//        print('authorization: ' + optionParams["Authorization"]);
-      }
     }
 
     try {
@@ -517,7 +585,7 @@ class Api {
   ///[ pushRouter] 登录页出现的方式
   ///1、null 【默认方式】登录页替换底页 ,并没有指定登录成功后的跳转去向
   ///2、其他方式详见[ PushAndRedirect ]
-  netFetchPro(
+  Future<ResultData> netFetchCharge(
     String url,
     data,
     Map<String, String> header,
@@ -542,11 +610,10 @@ class Api {
     if (header != null) {
       headers.addAll(header);
     }
-    //增加防篡改
-    headers.addAll(getParamsPro(data, url, option?.method));
-    //增加防重放字符串
-    // todo 判断什么时候将 data 全转为字符串
-    headers.addAll(await antiReplayPro(data, false));
+
+//    headers.addAll(await antiReplay());
+    //补充参数 包含防重放 防篡改
+    await iChargeData(data, false);
     //增加当前设备信息
     headers.addAll(await getDeviceInfo());
     //授权码
@@ -690,11 +757,6 @@ class Api {
                 false,
                 Code.USER_NOTFOUND);
           default:
-//               return new ResultData(
-//              Code.errorHandleFunction(
-//                  Code.LOGIN_PASSWORD_ERROR, e.message, noTip),
-//              false,
-//              Code.LOGIN_PASSWORD_ERROR);
             break;
         }
       }
@@ -720,37 +782,60 @@ class Api {
       if (response != null) {
         print('返回参数: ' + response.toString());
       }
-      if (optionParams["Authorization"] != null) {
-//        print('authorization: ' + optionParams["Authorization"]);
-      }
     }
 
     try {
       if (option.contentType != null && option.contentType == "text") {
         return new ResultData(response.data, true, Code.SUCCESS);
-      } else {
-        var responseJson = response.data;
-        if (responseJson["access_token"] != null) {
-          optionParams["Authorization"] =
-              'Bearer ' + responseJson["access_token"];
-          await LocalStorage.save(this.tokenKey, responseJson["access_token"]);
-          await LocalStorage.save(
-              this.refreshTokenKey, responseJson["refresh_token"]);
-        }
       }
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return new ResultData(response.data, true, Code.SUCCESS,
+
+      //处理充电的用户登录接口独有报错方式
+      bool iChargeResult = iChargeFail(url, response, noTip: noTip);
+      if (!iChargeResult)
+        return new ResultData(response.data, false, 999,
             headers: response.headers);
+
+      var responseJson = response.data;
+      String token = responseJson["token"];
+      if (token != null && token.isNotEmpty) {
+        optionParams["Authorization"] = 'Bearer ' + token;
+        await LocalStorage.save(this.tokenKey, token);
+        //充电没有续约 token
+//        await LocalStorage.save(
+//            this.refreshTokenKey, responseJson["refresh_token"]);
       }
+
+      return new ResultData(response.data, true, Code.SUCCESS,
+          headers: response.headers);
     } catch (e) {
       print(e.toString() + url);
-      return new ResultData(response.data, false, response.statusCode,
+      return new ResultData(response.data, false, 999,
           headers: response.headers);
     }
-    return new ResultData(
-        Code.errorHandleFunction(response.statusCode, "", noTip),
-        false,
-        response.statusCode);
+    return new ResultData(Code.errorHandleFunction(999, "", noTip), false, 999);
+  }
+
+  bool iChargeFail(String url, Response response, {bool noTip}) {
+    //充电自己处理的用户登录接口
+    if (response.data['success'] != null && !response.data['success']) {
+      String reason = response.data['errorCode'];
+      if (checkContainsUrl(url)) {
+        //登录情况下提示
+        switch (reason) {
+          case 'E401':
+            Code.errorHandleFunction(Code.LOGIN_PASSWORD_ERROR, '', noTip);
+            break;
+          case 'E402':
+            Code.errorHandleFunction(Code.LOGIN_PASSWORD_ERROR, '', noTip);
+            break;
+          default:
+            Code.errorHandleFunction(999, response.data['errorInfo'], noTip);
+            break;
+        }
+      }
+      return false;
+    }
+    return true;
   }
 
   bool checkContainsUrl(String url) => this.containUrlKey == null

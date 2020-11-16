@@ -73,9 +73,10 @@ class RondoUtils {
   }
 
   static Future<String> secretToEncryptPromise(publicKey, value,
-      {EncryptType encryptType = EncryptType.SM3SM2}) async {
+      {EncryptType encryptType = EncryptType.SM3SM2,
+      String functionStr}) async {
     List<String> result = await secretMultiToEncryptPromise(publicKey, [value],
-        encryptType: encryptType);
+        encryptType: encryptType, functionStr: functionStr);
     if (result != null && result.length > 0) {
       return result[0];
     }
@@ -84,7 +85,8 @@ class RondoUtils {
 
   static Future<List<String>> secretMultiToEncryptPromise(
       publicKey, List values,
-      {EncryptType encryptType = EncryptType.SM3SM2}) async {
+      {EncryptType encryptType = EncryptType.SM3SM2,
+      String functionStr}) async {
     flutterWebviewPlugin?.close();
     String file = 'static/secret/sm3Sm2.html';
     if (encryptType == EncryptType.SM2) file = 'static/secret/sm2.html';
@@ -106,7 +108,7 @@ class RondoUtils {
     List<String> results = [];
     for (var element in values) {
       String result = await flutterWebviewPlugin.evalJavascript(
-          "this.sm3AndSm2EncryptRP('$publicKey','$element','|');");
+          "this.${functionStr != null ? functionStr : "sm3AndSm2EncryptRP"}('$publicKey','$element','|');");
       //处理安卓端差异(加密后的值会带两个冒号，将其去掉)
       if (Platform.isAndroid) {
         result = result.substring(1, result.length - 1);
