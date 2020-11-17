@@ -674,6 +674,7 @@ class Api {
           queryParameters:
           (data is Map<String, dynamic>) && showParameters ? data : null);
     } on DioError catch (e) {
+      print('-------------0---------------');
       Response errorResponse;
       if (e.response != null) {
         errorResponse = e.response;
@@ -800,7 +801,7 @@ class Api {
             headers: response.headers);
 
       var responseJson = response.data;
-      String token = responseJson["token"];
+      String token = responseJson['data']["token"];
       if (token != null && token.isNotEmpty) {
         optionParams["Authorization"] = 'Bearer ' + token;
         await LocalStorage.save(this.tokenKey, token);
