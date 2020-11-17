@@ -187,7 +187,10 @@ class Api {
   antiReplay() {
     antiReplayParams['X-Request-Token'] = getUUID();
     antiReplayParams['X-Request-Time'] =
-        DateTime.now().millisecondsSinceEpoch.toString();
+        DateTime
+            .now()
+            .millisecondsSinceEpoch
+            .toString();
     antiReplayParams['X-Request-Sign'] = Sm3Utils.encryptFromText(
         antiReplayParams['X-Request-Time'] +
             ',' +
@@ -197,7 +200,9 @@ class Api {
   }
 
   iChargeData(Map data, bool isFileUpload) async {
-    data['timestamp'] = DateTime.now().millisecondsSinceEpoch;
+    data['timestamp'] = DateTime
+        .now()
+        .millisecondsSinceEpoch;
     data['nonce'] = randomStr(true, 8, 10);
 //    data['nonce'] = getUUID();
     data['token'] = await LocalStorage.get(this.tokenKey) ?? '';
@@ -285,7 +290,8 @@ class Api {
     for (var i in arr) {
       url += i + "=" + paramsData[i] + "&";
     }
-    String object = '', urlString = '';
+    String object = '',
+        urlString = '';
     try {
       method == 'post' ? object = jsonEncode(params) : object = "";
     } catch (err) {}
@@ -343,15 +349,14 @@ class Api {
   ///[ pushRouter] 登录页出现的方式
   ///1、null 【默认方式】登录页替换底页 ,并没有指定登录成功后的跳转去向
   ///2、其他方式详见[ PushAndRedirect ]
-  netFetch(
-    String url,
-    data,
-    Map<String, String> header,
-    Options option, {
-    noTip = false,
-    showParameters = false,
-    PushAndRedirect pushRouter,
-  }) async {
+  netFetch(String url,
+      data,
+      Map<String, String> header,
+      Options option, {
+        noTip = false,
+        showParameters = false,
+        PushAndRedirect pushRouter,
+      }) async {
     //没有网络
     var connectivityResult = await (new Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.none) {
@@ -426,7 +431,7 @@ class Api {
           data: data,
           options: option,
           queryParameters:
-              (data is Map<String, dynamic>) && showParameters ? data : null);
+          (data is Map<String, dynamic>) && showParameters ? data : null);
     } on DioError catch (e) {
       Response errorResponse;
       if (e.response != null) {
@@ -462,7 +467,7 @@ class Api {
       if (errorResponse.statusCode == 400 &&
           errorResponse.data.toString().indexOf('invalid_grant') != -1) {
         switch (errorResponse.data['error_description'].toString()) {
-          //AccountLoginLockedException
+        //AccountLoginLockedException
           case 'AccountLockedException':
             return new ResultData(
                 Code.errorHandleFunction(Code.USER_LOCKED, e.message, noTip),
@@ -585,15 +590,14 @@ class Api {
   ///[ pushRouter] 登录页出现的方式
   ///1、null 【默认方式】登录页替换底页 ,并没有指定登录成功后的跳转去向
   ///2、其他方式详见[ PushAndRedirect ]
-  Future<ResultData> netFetchCharge(
-    String url,
-    data,
-    Map<String, String> header,
-    Options option, {
-    bool noTip = false,
-    bool showParameters = false,
-    PushAndRedirect pushRouter,
-  }) async {
+  Future<ResultData> netFetchCharge(String url,
+      data,
+      Map<String, String> header,
+      Options option, {
+        bool noTip = false,
+        bool showParameters = false,
+        PushAndRedirect pushRouter,
+      }) async {
     //判断网络状况
     var connectivityResult = await (new Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.none) {
@@ -668,7 +672,7 @@ class Api {
           data: data,
           options: option,
           queryParameters:
-              (data is Map<String, dynamic>) && showParameters ? data : null);
+          (data is Map<String, dynamic>) && showParameters ? data : null);
     } on DioError catch (e) {
       Response errorResponse;
       if (e.response != null) {
@@ -704,7 +708,7 @@ class Api {
       if (errorResponse.statusCode == 400 &&
           errorResponse.data.toString().indexOf('invalid_grant') != -1) {
         switch (errorResponse.data['error_description'].toString()) {
-          //AccountLoginLockedException
+        //AccountLoginLockedException
           case 'AccountLockedException':
             return new ResultData(
                 Code.errorHandleFunction(Code.USER_LOCKED, e.message, noTip),
@@ -838,9 +842,10 @@ class Api {
     return true;
   }
 
-  bool checkContainsUrl(String url) => this.containUrlKey == null
-      ? url.contains('oauth/token')
-      : url.contains(this.containUrlKey);
+  bool checkContainsUrl(String url) =>
+      this.containUrlKey == null
+          ? url.contains('oauth/token')
+          : url.contains(this.containUrlKey);
 
   ///判断app的开发者模式
   checkDevelopment(String url) async {
@@ -884,7 +889,7 @@ class Api {
     }
   }
 
-  hasToken() async {
+  Future<bool> hasToken() async {
     String token = await LocalStorage.get(this.tokenKey);
     if (token == null || token.isEmpty) {
       return false;
@@ -930,7 +935,7 @@ class Api {
 
       try {
         response =
-            await dio.request(refUrl, data: requestParams, options: refOption);
+        await dio.request(refUrl, data: requestParams, options: refOption);
       } on DioError catch (e) {
         //无论什么异常，将继续执行
         print(e);
