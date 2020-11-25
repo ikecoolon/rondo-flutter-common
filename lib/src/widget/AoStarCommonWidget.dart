@@ -23,7 +23,7 @@ class AostarCommonWidget extends StatefulWidget {
 class _AostarCommonWidget extends State<AostarCommonWidget> {
   StreamSubscription stream;
 
-//  DateTime recordTime;
+  String recordTime;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +58,25 @@ class _AostarCommonWidget extends State<AostarCommonWidget> {
   }
 
   errorHandleFunction(int code, message, {PushAndRedirect pushRouter}) async {
+    //防止短时间重复提示
+    recordTime = await LocalStorage.get(RondoKey.RECORD_TIME_KEY);
+    int difference;
+    if (recordTime != null) {
+      difference =
+          DateTime.now().millisecondsSinceEpoch - int.tryParse(recordTime);
+//          print('3===$difference===${DateTime.now()}=====${recordTime}');
+      if (difference < 1000) {
+        return;
+      } else {
+        await LocalStorage.save(RondoKey.RECORD_TIME_KEY,
+            DateTime.now().millisecondsSinceEpoch.toString());
+      }
+    }
+    if (recordTime == null) {
+      await LocalStorage.save(RondoKey.RECORD_TIME_KEY,
+          DateTime.now().millisecondsSinceEpoch.toString());
+    }
+
     switch (code) {
       case Code.NETWORK_ERROR:
         Fluttertoast.showToast(msg: '网络错误');
