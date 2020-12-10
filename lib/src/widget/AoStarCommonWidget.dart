@@ -22,7 +22,7 @@ class AostarCommonWidget extends StatefulWidget {
 
 class _AostarCommonWidget extends State<AostarCommonWidget> {
   StreamSubscription stream;
-
+  bool first = true;
   String recordTime;
 
   @override
@@ -42,10 +42,21 @@ class _AostarCommonWidget extends State<AostarCommonWidget> {
   @override
   void initState() {
     super.initState();
-    stream = Code.eventBus.on<HttpErrorEvent>().listen((HttpErrorEvent event) {
-      errorHandleFunction(event.code, event.message,
-          pushRouter: event.pushRouter);
-    });
+    // stream = Code.eventBus.on<HttpErrorEvent>().listen((HttpErrorEvent event) {
+    //   errorHandleFunction(event.code, event.message,
+    //       pushRouter: event.pushRouter);
+    // });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (first) {
+      stream = Code.eventBus.on<HttpErrorEvent>().listen((HttpErrorEvent event) {
+        errorHandleFunction(event.code, event.message, pushRouter: event.pushRouter);
+      });
+      first = false;
+    }
   }
 
   @override
@@ -62,19 +73,16 @@ class _AostarCommonWidget extends State<AostarCommonWidget> {
     recordTime = await LocalStorage.get(RondoKey.RECORD_TIME_KEY);
     int difference;
     if (recordTime != null) {
-      difference =
-          DateTime.now().millisecondsSinceEpoch - int.tryParse(recordTime);
+      difference = DateTime.now().millisecondsSinceEpoch - int.tryParse(recordTime);
 //          print('3===$difference===${DateTime.now()}=====${recordTime}');
       if (difference < 1000) {
         return;
       } else {
-        await LocalStorage.save(RondoKey.RECORD_TIME_KEY,
-            DateTime.now().millisecondsSinceEpoch.toString());
+        await LocalStorage.save(RondoKey.RECORD_TIME_KEY, DateTime.now().millisecondsSinceEpoch.toString());
       }
     }
     if (recordTime == null) {
-      await LocalStorage.save(RondoKey.RECORD_TIME_KEY,
-          DateTime.now().millisecondsSinceEpoch.toString());
+      await LocalStorage.save(RondoKey.RECORD_TIME_KEY, DateTime.now().millisecondsSinceEpoch.toString());
     }
 
     switch (code) {
@@ -111,8 +119,7 @@ class _AostarCommonWidget extends State<AostarCommonWidget> {
         if (pushRouter == null) {
           Navigator.of(context).pushReplacementNamed(Api().loginRoute);
         } else {
-          if (pushRouter.redirect != null &&
-              pushRouter.redirect.toString().trim() != '') {
+          if (pushRouter.redirect != null && pushRouter.redirect.toString().trim() != '') {
             await LocalStorage.save(RondoKey.REDIRECT_KEY, pushRouter.redirect);
           }
 

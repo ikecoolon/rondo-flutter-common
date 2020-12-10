@@ -408,8 +408,9 @@ class Api {
           (X509Certificate cert, String host, int port) {
         return true;
       };
+        //todo 提交前屏蔽代理
 //       client.findProxy=(uri){
-//        return 'PROXY 192.168.3.91:9352';
+//        return 'PROXY 192.168.7.105:8888';
 //      };
     };
 
@@ -649,8 +650,9 @@ class Api {
           (X509Certificate cert, String host, int port) {
         return true;
       };
-//       client.findProxy=(uri){
-//        return 'PROXY 192.168.3.91:9352';
+      //todo 提交前屏蔽代理
+//      client.findProxy=(uri){
+//        return 'PROXY 192.168.7.105:8888';
 //      };
     };
 
