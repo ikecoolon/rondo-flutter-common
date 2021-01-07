@@ -186,23 +186,15 @@ class Api {
 
   antiReplay() {
     antiReplayParams['X-Request-Token'] = getUUID();
-    antiReplayParams['X-Request-Time'] =
-        DateTime
-            .now()
-            .millisecondsSinceEpoch
-            .toString();
-    antiReplayParams['X-Request-Sign'] = Sm3Utils.encryptFromText(
-        antiReplayParams['X-Request-Time'] +
-            ',' +
-            antiReplayParams['X-Request-Token']);
+    antiReplayParams['X-Request-Time'] = DateTime.now().millisecondsSinceEpoch.toString();
+    antiReplayParams['X-Request-Sign'] =
+        Sm3Utils.encryptFromText(antiReplayParams['X-Request-Time'] + ',' + antiReplayParams['X-Request-Token']);
 
     return antiReplayParams;
   }
 
   iChargeData(Map data, bool isFileUpload) async {
-    data['timestamp'] = DateTime
-        .now()
-        .millisecondsSinceEpoch;
+    data['timestamp'] = DateTime.now().millisecondsSinceEpoch;
     data['nonce'] = randomStr(true, 8, 10);
 //    data['nonce'] = getUUID();
     data['token'] = await LocalStorage.get(this.tokenKey) ?? '';
@@ -290,15 +282,12 @@ class Api {
     for (var i in arr) {
       url += i + "=" + paramsData[i] + "&";
     }
-    String object = '',
-        urlString = '';
+    String object = '', urlString = '';
     try {
       method == 'post' ? object = jsonEncode(params) : object = "";
     } catch (err) {}
 
-    (url != null && url.isNotEmpty)
-        ? urlString = url.substring(0, url.length - 1)
-        : urlString = "";
+    (url != null && url.isNotEmpty) ? urlString = url.substring(0, url.length - 1) : urlString = "";
     //针对这个接口做特殊处理
     if (urlStr.indexOf('regUserAuto') > -1) {
       if (object.trim() == '{}') {
@@ -349,21 +338,19 @@ class Api {
   ///[ pushRouter] 登录页出现的方式
   ///1、null 【默认方式】登录页替换底页 ,并没有指定登录成功后的跳转去向
   ///2、其他方式详见[ PushAndRedirect ]
-  netFetch(String url,
-      data,
-      Map<String, String> header,
-      Options option, {
-        noTip = false,
-        showParameters = false,
-        PushAndRedirect pushRouter,
-      }) async {
+  netFetch(
+    String url,
+    data,
+    Map<String, String> header,
+    Options option, {
+    noTip = false,
+    showParameters = false,
+    PushAndRedirect pushRouter,
+  }) async {
     //没有网络
     var connectivityResult = await (new Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.none) {
-      return new ResultData(
-          Code.errorHandleFunction(Code.NETWORK_ERROR, "", noTip),
-          false,
-          Code.NETWORK_ERROR);
+      return new ResultData(Code.errorHandleFunction(Code.NETWORK_ERROR, "", noTip), false, Code.NETWORK_ERROR);
     }
 
     //判断是否开启开发者模式
@@ -402,13 +389,11 @@ class Api {
     Dio dio = Dio();
     dio.interceptors.add(alice.getDioInterceptor());
     //设置忽略证书信任
-    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
-        (client) {
-      client.badCertificateCallback =
-          (X509Certificate cert, String host, int port) {
+    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+      client.badCertificateCallback = (X509Certificate cert, String host, int port) {
         return true;
       };
-        //todo 提交前屏蔽代理
+      //todo 提交前屏蔽代理
 //       client.findProxy=(uri){
 //        return 'PROXY 192.168.7.105:8888';
 //      };
@@ -429,10 +414,7 @@ class Api {
         showParameters = true;
       }
       response = await dio.request(url,
-          data: data,
-          options: option,
-          queryParameters:
-          (data is Map<String, dynamic>) && showParameters ? data : null);
+          data: data, options: option, queryParameters: (data is Map<String, dynamic>) && showParameters ? data : null);
     } on DioError catch (e) {
       Response errorResponse;
       if (e.response != null) {
@@ -452,8 +434,7 @@ class Api {
       //如果遇到401，
       if (errorResponse.statusCode == 401) {
         //尝试续约token
-        var result = await refreshToken(dio,
-            url: url, params: data, header: headers, option: option);
+        var result = await refreshToken(dio, url: url, params: data, header: headers, option: option);
         if (result != null) {
           return result;
         }
@@ -465,61 +446,40 @@ class Api {
       }
 
       //如果auth/token登录返回的400 可能是密码错误，用户被锁、验证码错误等等，做特殊处理
-      if (errorResponse.statusCode == 400 &&
-          errorResponse.data.toString().indexOf('invalid_grant') != -1) {
+      if (errorResponse.statusCode == 400 && errorResponse.data.toString().indexOf('invalid_grant') != -1) {
         switch (errorResponse.data['error_description'].toString()) {
-        //AccountLoginLockedException
+          //AccountLoginLockedException
           case 'AccountLockedException':
             return new ResultData(
-                Code.errorHandleFunction(Code.USER_LOCKED, e.message, noTip),
-                false,
-                Code.USER_LOCKED);
+                Code.errorHandleFunction(Code.USER_LOCKED, e.message, noTip), false, Code.USER_LOCKED);
             break;
           case 'AccountLoginLockedException':
             return new ResultData(
-                Code.errorHandleFunction(Code.USER_LOCKED, e.message, noTip),
-                false,
-                Code.USER_LOCKED);
+                Code.errorHandleFunction(Code.USER_LOCKED, e.message, noTip), false, Code.USER_LOCKED);
             break;
           case 'VerifyCodeIllegalCharException':
             return new ResultData(
-                Code.errorHandleFunction(
-                    Code.LOGIN_SMS_ERRORCHAR, e.message, noTip),
-                false,
-                Code.LOGIN_SMS_ERRORCHAR);
+                Code.errorHandleFunction(Code.LOGIN_SMS_ERRORCHAR, e.message, noTip), false, Code.LOGIN_SMS_ERRORCHAR);
             break;
           case 'VerifyCodeIllegalLengthException':
-            return new ResultData(
-                Code.errorHandleFunction(
-                    Code.LOGIN_SMS_ERRORLENGTH, e.message, noTip),
-                false,
+            return new ResultData(Code.errorHandleFunction(Code.LOGIN_SMS_ERRORLENGTH, e.message, noTip), false,
                 Code.LOGIN_SMS_ERRORLENGTH);
             break;
           case 'AccountDormancyException':
             return new ResultData(
-                Code.errorHandleFunction(Code.USER_DORMANCY, e.message, noTip),
-                false,
-                Code.USER_DORMANCY);
+                Code.errorHandleFunction(Code.USER_DORMANCY, e.message, noTip), false, Code.USER_DORMANCY);
             break;
           case 'VerifyCodeException':
             return new ResultData(
-                Code.errorHandleFunction(
-                    Code.LOGIN_SMS_ERROR, e.message, noTip),
-                false,
-                Code.LOGIN_SMS_ERROR);
+                Code.errorHandleFunction(Code.LOGIN_SMS_ERROR, e.message, noTip), false, Code.LOGIN_SMS_ERROR);
             break;
           case 'FailedLoginException':
-            return new ResultData(
-                Code.errorHandleFunction(
-                    Code.LOGIN_PASSWORD_ERROR, e.message, noTip),
-                false,
+            return new ResultData(Code.errorHandleFunction(Code.LOGIN_PASSWORD_ERROR, e.message, noTip), false,
                 Code.LOGIN_PASSWORD_ERROR);
             break;
           case 'AccountNotFoundException':
             return new ResultData(
-                Code.errorHandleFunction(Code.USER_NOTFOUND, e.message, noTip),
-                false,
-                Code.USER_NOTFOUND);
+                Code.errorHandleFunction(Code.USER_NOTFOUND, e.message, noTip), false, Code.USER_NOTFOUND);
           default:
 //               return new ResultData(
 //              Code.errorHandleFunction(
@@ -531,13 +491,10 @@ class Api {
       }
       if (errorResponse.statusCode == 302) {
         return new ResultData(
-            Code.errorHandleFunction(errorResponse.statusCode, '', noTip),
-            false,
-            errorResponse.statusCode);
+            Code.errorHandleFunction(errorResponse.statusCode, '', noTip), false, errorResponse.statusCode);
       }
       return new ResultData(
-          Code.errorHandleFunction(errorResponse.statusCode, e.message, noTip,
-              pushRouter: pushRouter),
+          Code.errorHandleFunction(errorResponse.statusCode, e.message, noTip, pushRouter: pushRouter),
           false,
           errorResponse.statusCode);
     }
@@ -559,26 +516,19 @@ class Api {
       } else {
         var responseJson = response.data;
         if (responseJson["access_token"] != null) {
-          optionParams["Authorization"] =
-              'Bearer ' + responseJson["access_token"];
+          optionParams["Authorization"] = 'Bearer ' + responseJson["access_token"];
           await LocalStorage.save(this.tokenKey, responseJson["access_token"]);
-          await LocalStorage.save(
-              this.refreshTokenKey, responseJson["refresh_token"]);
+          await LocalStorage.save(this.refreshTokenKey, responseJson["refresh_token"]);
         }
       }
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return new ResultData(response.data, true, Code.SUCCESS,
-            headers: response.headers);
+        return new ResultData(response.data, true, Code.SUCCESS, headers: response.headers);
       }
     } catch (e) {
       print(e.toString() + url);
-      return new ResultData(response.data, false, response.statusCode,
-          headers: response.headers);
+      return new ResultData(response.data, false, response.statusCode, headers: response.headers);
     }
-    return new ResultData(
-        Code.errorHandleFunction(response.statusCode, "", noTip),
-        false,
-        response.statusCode);
+    return new ResultData(Code.errorHandleFunction(response.statusCode, "", noTip), false, response.statusCode);
   }
 
   ///发起网络请求
@@ -591,21 +541,19 @@ class Api {
   ///[ pushRouter] 登录页出现的方式
   ///1、null 【默认方式】登录页替换底页 ,并没有指定登录成功后的跳转去向
   ///2、其他方式详见[ PushAndRedirect ]
-  Future<ResultData> netFetchCharge(String url,
-      data,
-      Map<String, String> header,
-      Options option, {
-        bool noTip = false,
-        bool showParameters = false,
-        PushAndRedirect pushRouter,
-      }) async {
+  Future<ResultData> netFetchCharge(
+    String url,
+    data,
+    Map<String, String> header,
+    Options option, {
+    bool noTip = false,
+    bool showParameters = false,
+    PushAndRedirect pushRouter,
+  }) async {
     //判断网络状况
     var connectivityResult = await (new Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.none) {
-      return new ResultData(
-          Code.errorHandleFunction(Code.NETWORK_ERROR, "", noTip),
-          false,
-          Code.NETWORK_ERROR);
+      return new ResultData(Code.errorHandleFunction(Code.NETWORK_ERROR, "", noTip), false, Code.NETWORK_ERROR);
     }
 
     //判断是否开启开发者模式
@@ -629,7 +577,13 @@ class Api {
       }
     }
     headers["Authorization"] = optionParams["Authorization"];
-
+    //不同app 传递参数配置
+    try {
+      String paramsKey = await LocalStorage.get('params-key');
+      headers["appChannel"] = paramsKey;
+    } catch (err) {
+      print(err);
+    }
     if (option != null) {
       option.headers = headers;
     } else {
@@ -644,10 +598,8 @@ class Api {
     Dio dio = Dio();
     dio.interceptors.add(alice.getDioInterceptor());
     //设置忽略证书信任
-    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
-        (client) {
-      client.badCertificateCallback =
-          (X509Certificate cert, String host, int port) {
+    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+      client.badCertificateCallback = (X509Certificate cert, String host, int port) {
         return true;
       };
       //todo 提交前屏蔽代理
@@ -671,10 +623,7 @@ class Api {
         showParameters = true;
       }
       response = await dio.request(url,
-          data: data,
-          options: option,
-          queryParameters:
-          (data is Map<String, dynamic>) && showParameters ? data : null);
+          data: data, options: option, queryParameters: (data is Map<String, dynamic>) && showParameters ? data : null);
     } on DioError catch (e) {
       print('-------------0---------------');
       Response errorResponse;
@@ -695,8 +644,7 @@ class Api {
       //如果遇到401，
       if (errorResponse.statusCode == 401) {
         //尝试续约token
-        var result = await refreshToken(dio,
-            url: url, params: data, header: headers, option: option);
+        var result = await refreshToken(dio, url: url, params: data, header: headers, option: option);
         if (result != null) {
           return result;
         }
@@ -708,74 +656,50 @@ class Api {
       }
 
       //如果auth/token登录返回的400 可能是密码错误，用户被锁、验证码错误等等，做特殊处理
-      if (errorResponse.statusCode == 400 &&
-          errorResponse.data.toString().indexOf('invalid_grant') != -1) {
+      if (errorResponse.statusCode == 400 && errorResponse.data.toString().indexOf('invalid_grant') != -1) {
         switch (errorResponse.data['error_description'].toString()) {
-        //AccountLoginLockedException
+          //AccountLoginLockedException
           case 'AccountLockedException':
             return new ResultData(
-                Code.errorHandleFunction(Code.USER_LOCKED, e.message, noTip),
-                false,
-                Code.USER_LOCKED);
+                Code.errorHandleFunction(Code.USER_LOCKED, e.message, noTip), false, Code.USER_LOCKED);
             break;
           case 'AccountLoginLockedException':
             return new ResultData(
-                Code.errorHandleFunction(Code.USER_LOCKED, e.message, noTip),
-                false,
-                Code.USER_LOCKED);
+                Code.errorHandleFunction(Code.USER_LOCKED, e.message, noTip), false, Code.USER_LOCKED);
             break;
           case 'VerifyCodeIllegalCharException':
             return new ResultData(
-                Code.errorHandleFunction(
-                    Code.LOGIN_SMS_ERRORCHAR, e.message, noTip),
-                false,
-                Code.LOGIN_SMS_ERRORCHAR);
+                Code.errorHandleFunction(Code.LOGIN_SMS_ERRORCHAR, e.message, noTip), false, Code.LOGIN_SMS_ERRORCHAR);
             break;
           case 'VerifyCodeIllegalLengthException':
-            return new ResultData(
-                Code.errorHandleFunction(
-                    Code.LOGIN_SMS_ERRORLENGTH, e.message, noTip),
-                false,
+            return new ResultData(Code.errorHandleFunction(Code.LOGIN_SMS_ERRORLENGTH, e.message, noTip), false,
                 Code.LOGIN_SMS_ERRORLENGTH);
             break;
           case 'AccountDormancyException':
             return new ResultData(
-                Code.errorHandleFunction(Code.USER_DORMANCY, e.message, noTip),
-                false,
-                Code.USER_DORMANCY);
+                Code.errorHandleFunction(Code.USER_DORMANCY, e.message, noTip), false, Code.USER_DORMANCY);
             break;
           case 'VerifyCodeException':
             return new ResultData(
-                Code.errorHandleFunction(
-                    Code.LOGIN_SMS_ERROR, e.message, noTip),
-                false,
-                Code.LOGIN_SMS_ERROR);
+                Code.errorHandleFunction(Code.LOGIN_SMS_ERROR, e.message, noTip), false, Code.LOGIN_SMS_ERROR);
             break;
           case 'FailedLoginException':
-            return new ResultData(
-                Code.errorHandleFunction(
-                    Code.LOGIN_PASSWORD_ERROR, e.message, noTip),
-                false,
+            return new ResultData(Code.errorHandleFunction(Code.LOGIN_PASSWORD_ERROR, e.message, noTip), false,
                 Code.LOGIN_PASSWORD_ERROR);
             break;
           case 'AccountNotFoundException':
             return new ResultData(
-                Code.errorHandleFunction(Code.USER_NOTFOUND, e.message, noTip),
-                false,
-                Code.USER_NOTFOUND);
+                Code.errorHandleFunction(Code.USER_NOTFOUND, e.message, noTip), false, Code.USER_NOTFOUND);
           default:
             break;
         }
       }
       if (errorResponse.statusCode == 302) {
         return new ResultData(
-            Code.errorHandleFunction(errorResponse.statusCode, '', noTip),
-            false,
-            errorResponse.statusCode);
+            Code.errorHandleFunction(errorResponse.statusCode, '', noTip), false, errorResponse.statusCode);
       }
       return new ResultData(
-          Code.errorHandleFunction(errorResponse.statusCode, e.message, noTip,
-              pushRouter: pushRouter),
+          Code.errorHandleFunction(errorResponse.statusCode, e.message, noTip, pushRouter: pushRouter),
           false,
           errorResponse.statusCode);
     }
@@ -798,9 +722,7 @@ class Api {
 
       //处理充电的用户登录接口独有报错方式
       bool iChargeResult = iChargeFail(url, response, noTip: noTip);
-      if (!iChargeResult)
-        return new ResultData(response.data, false, 999,
-            headers: response.headers);
+      if (!iChargeResult) return new ResultData(response.data, false, 999, headers: response.headers);
 
       var responseJson = response.data;
       String token = responseJson['data']["token"];
@@ -812,12 +734,10 @@ class Api {
 //            this.refreshTokenKey, responseJson["refresh_token"]);
       }
 
-      return new ResultData(response.data, true, Code.SUCCESS,
-          headers: response.headers);
+      return new ResultData(response.data, true, Code.SUCCESS, headers: response.headers);
     } catch (e) {
       print(e.toString() + url);
-      return new ResultData(response.data, false, 999,
-          headers: response.headers);
+      return new ResultData(response.data, false, 999, headers: response.headers);
     }
     return new ResultData(Code.errorHandleFunction(999, "", noTip), false, 999);
   }
@@ -846,9 +766,7 @@ class Api {
   }
 
   bool checkContainsUrl(String url) =>
-      this.containUrlKey == null
-          ? url.contains('oauth/token')
-          : url.contains(this.containUrlKey);
+      this.containUrlKey == null ? url.contains('oauth/token') : url.contains(this.containUrlKey);
 
   ///判断app的开发者模式
   checkDevelopment(String url) async {
@@ -923,10 +841,7 @@ class Api {
       String refUrl = this.authorizationUrl;
       //auth/token 接口加入防重放列表，续约 token 实现需注意加入
       headers.addAll(antiReplay());
-      Options refOption = new Options(
-          headers: headers,
-          method: "post",
-          contentType: Headers.formUrlEncodedContentType);
+      Options refOption = new Options(headers: headers, method: "post", contentType: Headers.formUrlEncodedContentType);
 
       if (debug) {
         print('--------------------------');
@@ -937,8 +852,7 @@ class Api {
       }
 
       try {
-        response =
-        await dio.request(refUrl, data: requestParams, options: refOption);
+        response = await dio.request(refUrl, data: requestParams, options: refOption);
       } on DioError catch (e) {
         //无论什么异常，将继续执行
         print(e);
@@ -948,11 +862,9 @@ class Api {
       if (response != null) {
         var responseJson = response.data;
         if (responseJson["access_token"] != null) {
-          optionParams["Authorization"] =
-              'Bearer ' + responseJson["access_token"];
+          optionParams["Authorization"] = 'Bearer ' + responseJson["access_token"];
           await LocalStorage.save(this.tokenKey, responseJson["access_token"]);
-          await LocalStorage.save(
-              this.refreshTokenKey, responseJson["refresh_token"]);
+          await LocalStorage.save(this.refreshTokenKey, responseJson["refresh_token"]);
           //如果更新了token，重新请求当前的请求
           return netFetch(url, params, header, option);
         }
