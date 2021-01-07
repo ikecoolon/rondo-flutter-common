@@ -374,7 +374,13 @@ class Api {
       }
     }
     headers["Authorization"] = optionParams["Authorization"];
-
+    //不同app 传递参数配置
+    try {
+      String paramsKey = await LocalStorage.get('params-key');
+      headers["app-channel"] = paramsKey;
+    } catch (err) {
+      print(err);
+    }
     if (option != null) {
       option.headers = headers;
     } else {
@@ -577,13 +583,6 @@ class Api {
       }
     }
     headers["Authorization"] = optionParams["Authorization"];
-    //不同app 传递参数配置
-    try {
-      String paramsKey = await LocalStorage.get('params-key');
-      headers["app-channel"] = paramsKey;
-    } catch (err) {
-      print(err);
-    }
     if (option != null) {
       option.headers = headers;
     } else {
