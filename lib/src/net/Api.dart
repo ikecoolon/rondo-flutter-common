@@ -580,7 +580,7 @@ class Api {
     //不同app 传递参数配置
     try {
       String paramsKey = await LocalStorage.get('params-key');
-      headers["appChannel"] = paramsKey;
+      headers["app-channel"] = paramsKey;
     } catch (err) {
       print(err);
     }
