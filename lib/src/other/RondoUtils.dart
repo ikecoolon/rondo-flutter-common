@@ -42,8 +42,7 @@ class RondoUtils {
   ///[ publicKey ] 密钥
   ///[ value ] 需要加密的对象
   ///[ callback ] 返回结果，如果加密失败返回 null
-  static secretToEncrypt(context, publicKey, value,
-      {Function(String) callback}) async {
+  static secretToEncrypt(context, publicKey, value, {Function(String) callback}) async {
     var htmlData = await rootBundle.loadString('static/secret/sm3Sm2.html');
 //      flutterWebViewPlugin.launch(Address.hostWebSM3,
     flutterWebviewPlugin.launch(
@@ -54,8 +53,7 @@ class RondoUtils {
     String result;
     _onStateChanged = flutterWebviewPlugin.onStateChanged.listen((state) async {
       if (state.type == WebViewState.finishLoad) {
-        result = await flutterWebviewPlugin.evalJavascript(
-            "this.sm3AndSm2EncryptRP('$publicKey','$value','|');");
+        result = await flutterWebviewPlugin.evalJavascript("this.sm3AndSm2EncryptRP('$publicKey','$value','|');");
         //处理安卓端差异(加密后的值会带两个冒号，将其去掉)
         _onStateChanged.cancel();
         if (Platform.isAndroid) {
@@ -73,25 +71,23 @@ class RondoUtils {
   }
 
   static Future<String> secretToEncryptPromise(publicKey, value,
-      {EncryptType encryptType = EncryptType.SM3SM2,
-      String functionStr}) async {
-    List<String> result = await secretMultiToEncryptPromise(publicKey, [value],
-        encryptType: encryptType, functionStr: functionStr);
+      {EncryptType encryptType = EncryptType.SM3SM2, String functionStr}) async {
+    List<String> result =
+        await secretMultiToEncryptPromise(publicKey, [value], encryptType: encryptType, functionStr: functionStr);
     if (result != null && result.length > 0) {
       return result[0];
     }
     return null;
   }
 
-  static Future<List<String>> secretMultiToEncryptPromise(
-      publicKey, List values,
-      {EncryptType encryptType = EncryptType.SM3SM2,
-      String functionStr}) async {
+  static Future<List<String>> secretMultiToEncryptPromise(publicKey, List values,
+      {EncryptType encryptType = EncryptType.SM3SM2, String functionStr}) async {
     flutterWebviewPlugin?.close();
     String file = 'static/secret/sm3Sm2.html';
     if (encryptType == EncryptType.SM2) file = 'static/secret/sm2.html';
     String htmlData = await rootBundle.loadString(file);
 
+    flutterWebviewPlugin = FlutterWebviewPlugin(); //重新初始化，避免当前页面存在h5打开关闭后报错
     await flutterWebviewPlugin.launch(
       Uri.dataFromString(htmlData, mimeType: 'text/html').toString(),
       hidden: true,
@@ -120,8 +116,7 @@ class RondoUtils {
     return results;
   }
 
-  static Future<Null> showLoadingDialog(BuildContext context,
-      {int dismissTimeout = 60}) {
+  static Future<Null> showLoadingDialog(BuildContext context, {int dismissTimeout = 60}) {
     bool timeout = false;
     Timer _timerDia;
     return showDialog(
@@ -163,8 +158,7 @@ class RondoUtils {
                         child: new Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
-                            new Container(
-                                child: SpinKitCubeGrid(color: Colors.white)),
+                            new Container(child: SpinKitCubeGrid(color: Colors.white)),
                             new Container(height: 10.0),
                             new Container(
                                 child: new Text('加载中...',
@@ -251,8 +245,7 @@ class RondoUtils {
 
   ///日期格式转换
   static String getNewsTimeStr(DateTime date) {
-    int subTime =
-        DateTime.now().millisecondsSinceEpoch - date.millisecondsSinceEpoch;
+    int subTime = DateTime.now().millisecondsSinceEpoch - date.millisecondsSinceEpoch;
 
     if (subTime < MILLIS_LIMIT) {
       return "刚刚";
