@@ -5,14 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 
 class AostarWebViewCommonPage extends StatefulWidget {
-  AostarWebViewCommonPage(
-      {Key key, this.title, this.url, this.jsFuncStr, this.hiddenButtonBar})
+  AostarWebViewCommonPage({Key key, this.title, this.url, this.jsFuncStr, this.hiddenButtonBar, this.barTextColor})
       : super(key: key);
 
   final String title;
   final String url;
   final bool hiddenButtonBar;
-
+  final Color barTextColor;
   final String jsFuncStr;
 
   @override
@@ -56,9 +55,7 @@ class AostarWebViewCommonPageState extends State<AostarWebViewCommonPage> {
         findHtmlTitle();
         //做些js操作
         if (widget.jsFuncStr != null && widget.jsFuncStr.isNotEmpty) {
-          flutterWebViewPlugin
-              .evalJavascript(widget.jsFuncStr)
-              .then((value) {});
+          flutterWebViewPlugin.evalJavascript(widget.jsFuncStr).then((value) {});
         }
       }
     });
@@ -87,7 +84,7 @@ class AostarWebViewCommonPageState extends State<AostarWebViewCommonPage> {
         centerTitle: true,
         title: Text(
           title,
-          style: new TextStyle(fontSize: 18, color: const Color(0xFF444444)),
+          style: new TextStyle(fontSize: 18, color: widget.barTextColor ?? Color(0xff444444)),
         ),
       ),
       withZoom: true,
